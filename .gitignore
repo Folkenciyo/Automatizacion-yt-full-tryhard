@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+
+# Node / Next.js
+node_modules/
+.next/
+
+# Env
+.env
+.env.*.local
+
+# Render output (audio/video generados localmente)
+worker/output/
+output/
+
+# OS
+.DS_Store
