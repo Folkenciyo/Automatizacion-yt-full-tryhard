@@ -63,6 +63,7 @@ services:
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:8000
+      PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL:-http://localhost:8000}
       APP_LOGIN_PASSWORD: ${APP_LOGIN_PASSWORD:-}
       APP_SESSION_TOKEN: ${APP_SESSION_TOKEN:-}
     depends_on:

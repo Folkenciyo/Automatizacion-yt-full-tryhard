@@ -45,7 +45,7 @@ export default async function ChannelPage({ params }: { params: Promise<{ id: st
         <div className="flex gap-2">
           {!oauth?.connected && (
             <a
-              href={`http://localhost:8000/channels/${channelId}/oauth/start`}
+              href={`${process.env.PUBLIC_BACKEND_URL ?? "http://localhost:8000"}/channels/${channelId}/oauth/start`}
               className="rounded border border-yellow-700 px-3 py-1.5 text-xs text-yellow-400 hover:bg-yellow-900/30 transition-colors"
             >
               Conectar YouTube
