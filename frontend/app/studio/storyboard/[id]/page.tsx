@@ -37,6 +37,8 @@ export default function StoryboardDetailPage() {
   const [sb, setSb] = useState<Storyboard | null>(null);
   const [generating, setGenerating] = useState<number | null>(null);
   const [syncing, setSyncing] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draftText, setDraftText] = useState("");
 
   const fetchSb = async () => {
     const res = await fetch(`/api/storyboards/${id}`);
@@ -73,6 +75,27 @@ export default function StoryboardDetailPage() {
     setSyncing(null);
   };
 
+  const startEditing = (p: Prompt) => {
+    setEditingId(p.id);
+    setDraftText(p.prompt_text);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setDraftText("");
+  };
+
+  const saveAndRegenerate = async (promptId: number) => {
+    await fetch(`/api/storyboards/${id}/prompts/${promptId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt_text: draftText }),
+    });
+    setEditingId(null);
+    setDraftText("");
+    await generateClip(promptId);
+  };
+
   if (!sb) return <div className="p-8 text-zinc-400">Cargando...</div>;
 
   const readyCount = sb.prompts.filter((p) => p.clip?.status === "ready").length;
@@ -104,7 +127,42 @@ export default function StoryboardDetailPage() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-zinc-300 mb-3">{p.prompt_text}</p>
+              {editingId === p.id ? (
+                <div className="mb-3 flex flex-col gap-2">
+                  <textarea
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-zinc-500 focus:outline-none"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => saveAndRegenerate(p.id)}
+                      disabled={generating === p.id || !draftText.trim()}
+                      className="rounded bg-indigo-600 px-3 py-1 text-xs font-medium hover:bg-indigo-500 disabled:opacity-50"
+                    >
+                      {generating === p.id ? "Enviando a pokemon..." : "Guardar y regenerar"}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="rounded bg-zinc-700 px-3 py-1 text-xs hover:bg-zinc-600"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <p className="text-sm text-zinc-300">{p.prompt_text}</p>
+                  <button
+                    onClick={() => startEditing(p)}
+                    className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 hover:underline"
+                  >
+                    Editar
+                  </button>
+                </div>
+              )}
 
               {p.clip ? (
                 <div className="flex items-start gap-4">
@@ -122,7 +180,7 @@ export default function StoryboardDetailPage() {
                     </div>
                   )}
                   <div className="flex flex-col gap-2">
-                    <span className={`text-xs font-medium ${STATUS_COLOR[p.clip.status] ?? "text-zinc-400"}`}>
+                    <span className={`text-xs font-medium ${STATUS_COLOR[p.clip.status]}`}>
                       {p.clip.status}
                     </span>
                     {p.clip.status !== "ready" && p.clip.status !== "failed" && (
@@ -132,6 +190,15 @@ export default function StoryboardDetailPage() {
                         className="rounded bg-zinc-700 px-3 py-1 text-xs hover:bg-zinc-600 disabled:opacity-50"
                       >
                         {syncing === p.id ? "Sincronizando..." : "Sincronizar"}
+                      </button>
+                    )}
+                    {(p.clip.status === "ready" || p.clip.status === "failed") && (
+                      <button
+                        onClick={() => generateClip(p.id)}
+                        disabled={generating === p.id}
+                        className="rounded bg-zinc-700 px-3 py-1 text-xs hover:bg-zinc-600 disabled:opacity-50"
+                      >
+                        {generating === p.id ? "Enviando a pokemon..." : "Regenerar"}
                       </button>
                     )}
                   </div>
