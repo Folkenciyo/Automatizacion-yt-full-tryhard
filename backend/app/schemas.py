@@ -137,6 +137,8 @@ class VideoClipRead(BaseModel):
     error: Optional[str]
     created_at: datetime
     updated_at: datetime
+    storyboard_id: Optional[int] = None
+    storyboard_title: Optional[str] = None
 
 
 # --- AudioAsset ---

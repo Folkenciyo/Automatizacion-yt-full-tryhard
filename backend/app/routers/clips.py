@@ -24,7 +24,15 @@ def _render_server_url(path: str) -> str:
 
 @router.get("", response_model=list[VideoClipRead])
 def list_clips(db: Session = Depends(get_db)):
-    return db.query(VideoClip).order_by(VideoClip.created_at.desc()).all()
+    clips = db.query(VideoClip).order_by(VideoClip.created_at.desc()).all()
+    result = []
+    for clip in clips:
+        story_prompt = clip.story_prompts[0] if clip.story_prompts else None
+        data = VideoClipRead.model_validate(clip).model_dump()
+        data["storyboard_id"] = story_prompt.storyboard_id if story_prompt else None
+        data["storyboard_title"] = story_prompt.storyboard.title if story_prompt else None
+        result.append(data)
+    return result
 
 
 @router.post("", response_model=VideoClipRead)
