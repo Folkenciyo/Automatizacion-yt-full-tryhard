@@ -111,6 +111,9 @@ def generate_prompt_clip(sb_id: int, prompt_id: int, db: Session = Depends(get_d
     db.commit()
 
     if old_clip is not None:
+        from app.services.render_client import cancel_render_job
+
+        cancel_render_job(old_clip.render_server_job_id)
         if old_clip.file_path:
             Path(old_clip.file_path).unlink(missing_ok=True)
         db.delete(old_clip)

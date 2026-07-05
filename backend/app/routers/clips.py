@@ -155,9 +155,12 @@ def preview_clip(clip_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{clip_id}")
 def delete_clip(clip_id: int, db: Session = Depends(get_db)):
+    from app.services.render_client import cancel_render_job
+
     clip = db.get(VideoClip, clip_id)
     if not clip:
         raise HTTPException(404, "Clip not found")
+    cancel_render_job(clip.render_server_job_id)
     if clip.file_path:
         try:
             Path(clip.file_path).unlink(missing_ok=True)
