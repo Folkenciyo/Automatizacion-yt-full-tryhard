@@ -31,6 +31,7 @@ def list_clips(db: Session = Depends(get_db)):
         data = VideoClipRead.model_validate(clip).model_dump()
         data["storyboard_id"] = story_prompt.storyboard_id if story_prompt else None
         data["storyboard_title"] = story_prompt.storyboard.title if story_prompt else None
+        data["storyboard_story_text"] = story_prompt.storyboard.story_text if story_prompt else None
         result.append(data)
     return result
 

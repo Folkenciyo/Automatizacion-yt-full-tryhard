@@ -139,6 +139,7 @@ class VideoClipRead(BaseModel):
     updated_at: datetime
     storyboard_id: Optional[int] = None
     storyboard_title: Optional[str] = None
+    storyboard_story_text: Optional[str] = None
 
 
 # --- AudioAsset ---
