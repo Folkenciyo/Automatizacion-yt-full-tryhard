@@ -162,6 +162,10 @@ class StoryPromptCreate(BaseModel):
     order: int
 
 
+class StoryPromptUpdate(BaseModel):
+    prompt_text: str
+
+
 class StoryPromptRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
