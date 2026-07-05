@@ -32,6 +32,13 @@ const STATUS_COLOR: Record<string, string> = {
   failed: "text-red-400",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  queued: "En cola",
+  generating: "Generando...",
+  ready: "Listo",
+  failed: "Error",
+};
+
 export default function StoryboardDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [sb, setSb] = useState<Storyboard | null>(null);
@@ -45,9 +52,27 @@ export default function StoryboardDetailPage() {
     if (res.ok) setSb(await res.json());
   };
 
+  const pollAndSync = async () => {
+    const res = await fetch(`/api/storyboards/${id}`);
+    if (!res.ok) return;
+    const data: Storyboard = await res.json();
+
+    const pending = data.prompts.filter(
+      (p) => p.clip && (p.clip.status === "queued" || p.clip.status === "generating")
+    );
+    if (pending.length === 0) {
+      setSb(data);
+      return;
+    }
+
+    await Promise.all(pending.map((p) => fetch(`/api/clips/${p.clip!.id}/sync`, { method: "POST" })));
+    const res2 = await fetch(`/api/storyboards/${id}`);
+    if (res2.ok) setSb(await res2.json());
+  };
+
   useEffect(() => {
-    fetchSb();
-    const interval = setInterval(fetchSb, 8000);
+    pollAndSync();
+    const interval = setInterval(pollAndSync, 8000);
     return () => clearInterval(interval);
   }, [id]);
 
@@ -176,12 +201,12 @@ export default function StoryboardDetailPage() {
                     />
                   ) : (
                     <div className="flex h-24 w-40 items-center justify-center rounded bg-zinc-800 text-xs text-zinc-500">
-                      {p.clip.status === "generating" ? "Generando..." : p.clip.status}
+                      {STATUS_LABEL[p.clip.status] ?? p.clip.status}
                     </div>
                   )}
                   <div className="flex flex-col gap-2">
                     <span className={`text-xs font-medium ${STATUS_COLOR[p.clip.status]}`}>
-                      {p.clip.status}
+                      {STATUS_LABEL[p.clip.status] ?? p.clip.status}
                     </span>
                     {p.clip.status !== "ready" && p.clip.status !== "failed" && (
                       <button
