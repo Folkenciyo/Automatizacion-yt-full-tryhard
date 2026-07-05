@@ -8,11 +8,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const backendRes = await fetch(`${BACKEND}/clips/${id}/preview`, {
     headers: range ? { Range: range } : {},
   });
+
+  const headers: HeadersInit = {
+    "Content-Type": backendRes.headers.get("Content-Type") ?? "video/mp4",
+    "Accept-Ranges": "bytes",
+  };
+  const contentLength = backendRes.headers.get("Content-Length");
+  if (contentLength) headers["Content-Length"] = contentLength;
+  const contentRange = backendRes.headers.get("Content-Range");
+  if (contentRange) headers["Content-Range"] = contentRange;
+
   return new Response(backendRes.body, {
     status: backendRes.status,
-    headers: {
-      "Content-Type": "video/mp4",
-      "Accept-Ranges": "bytes",
-    },
+    headers,
   });
 }
